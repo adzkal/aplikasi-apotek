@@ -1,27 +1,38 @@
-import { db } from '../firebase-config.js';
+import { db } from './firebase-config.js';
 import { collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let allTransaksi = [];
 
 // Switch tab laporan
-window.showLaporan = function(type) {
+window.showLaporan = function(type, event) {
     // Update tab buttons
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
     
     // Hide all content
     document.querySelectorAll('.laporan-content').forEach(content => content.classList.remove('active'));
     
     // Show selected content
     if (type === 'stok') {
-        document.getElementById('laporanStok').classList.add('active');
-        loadLaporanStok();
+        const laporanStok = document.getElementById('laporanStok');
+        if (laporanStok) {
+            laporanStok.classList.add('active');
+            loadLaporanStok();
+        }
     } else if (type === 'menipis') {
-        document.getElementById('laporanMenipis').classList.add('active');
-        loadLaporanMenipis();
+        const laporanMenipis = document.getElementById('laporanMenipis');
+        if (laporanMenipis) {
+            laporanMenipis.classList.add('active');
+            loadLaporanMenipis();
+        }
     } else if (type === 'penjualan') {
-        document.getElementById('laporanPenjualan').classList.add('active');
-        loadLaporanPenjualan();
+        const laporanPenjualan = document.getElementById('laporanPenjualan');
+        if (laporanPenjualan) {
+            laporanPenjualan.classList.add('active');
+            loadLaporanPenjualan();
+        }
     }
 }
 
@@ -60,9 +71,20 @@ async function loadLaporanStok() {
             html = '<tr><td colspan="7" style="text-align: center;">Tidak ada data</td></tr>';
         }
         
-        document.getElementById('stokTableBody').innerHTML = html;
-        document.getElementById('totalItemStok').textContent = totalItem;
-        document.getElementById('totalNilaiStok').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalNilai);
+        const tableBody = document.getElementById('stokTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = html;
+        }
+        
+        const totalItemEl = document.getElementById('totalItemStok');
+        if (totalItemEl) {
+            totalItemEl.textContent = totalItem;
+        }
+        
+        const totalNilaiEl = document.getElementById('totalNilaiStok');
+        if (totalNilaiEl) {
+            totalNilaiEl.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalNilai);
+        }
         
     } catch (error) {
         console.error('Error loading laporan stok:', error);
@@ -108,7 +130,10 @@ async function loadLaporanMenipis() {
             html = '<tr><td colspan="6" style="text-align: center;">Semua stok aman</td></tr>';
         }
         
-        document.getElementById('menipisTableBody').innerHTML = html;
+        const tableBody = document.getElementById('menipisTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = html;
+        }
         
     } catch (error) {
         console.error('Error loading laporan menipis:', error);
@@ -174,15 +199,26 @@ function displayPenjualan(data) {
         html = '<tr><td colspan="7" style="text-align: center;">Belum ada transaksi</td></tr>';
     }
     
-    document.getElementById('penjualanTableBody').innerHTML = html;
-    document.getElementById('totalTransaksi').textContent = totalTransaksi;
-    document.getElementById('totalPenjualan').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalPenjualan);
+    const tableBody = document.getElementById('penjualanTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = html;
+    }
+    
+    const totalTransaksiEl = document.getElementById('totalTransaksi');
+    if (totalTransaksiEl) {
+        totalTransaksiEl.textContent = totalTransaksi;
+    }
+    
+    const totalPenjualanEl = document.getElementById('totalPenjualan');
+    if (totalPenjualanEl) {
+        totalPenjualanEl.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalPenjualan);
+    }
 }
 
 // Filter penjualan by date
 window.filterPenjualan = function() {
-    const tanggalMulai = document.getElementById('tanggalMulai').value;
-    const tanggalAkhir = document.getElementById('tanggalAkhir').value;
+    const tanggalMulai = document.getElementById('tanggalMulai')?.value;
+    const tanggalAkhir = document.getElementById('tanggalAkhir')?.value;
     
     if (!tanggalMulai || !tanggalAkhir) {
         alert('Pilih tanggal mulai dan akhir!');
@@ -202,11 +238,66 @@ window.printLaporan = function(type) {
     window.print();
 }
 
+// Export laporan ke Excel/CSV
+window.exportLaporan = function(type) {
+    let csvContent = '';
+    let filename = '';
+    
+    if (type === 'stok') {
+        csvContent = 'No,Kode Obat,Nama Obat,Kategori,Stok,Harga Jual,Nilai Stok\n';
+        const rows = document.querySelectorAll('#stokTableBody tr');
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            if (cols.length > 1) {
+                const rowData = Array.from(cols).map(col => col.textContent.trim()).join(',');
+                csvContent += rowData + '\n';
+            }
+        });
+        filename = 'laporan_stok.csv';
+    } else if (type === 'menipis') {
+        csvContent = 'No,Kode Obat,Nama Obat,Kategori,Stok,Status\n';
+        const rows = document.querySelectorAll('#menipisTableBody tr');
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            if (cols.length > 1) {
+                const rowData = Array.from(cols).map(col => col.textContent.trim()).join(',');
+                csvContent += rowData + '\n';
+            }
+        });
+        filename = 'laporan_stok_menipis.csv';
+    } else if (type === 'penjualan') {
+        csvContent = 'No,No Transaksi,Tanggal,Total,Bayar,Kembalian,Petugas\n';
+        const rows = document.querySelectorAll('#penjualanTableBody tr');
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            if (cols.length > 1) {
+                const rowData = Array.from(cols).map(col => col.textContent.trim()).join(',');
+                csvContent += rowData + '\n';
+            }
+        });
+        filename = 'laporan_penjualan.csv';
+    }
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 // Set default date filter (hari ini)
 function setDefaultDateFilter() {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('tanggalMulai').value = today;
-    document.getElementById('tanggalAkhir').value = today;
+    const tanggalMulaiEl = document.getElementById('tanggalMulai');
+    const tanggalAkhirEl = document.getElementById('tanggalAkhir');
+    
+    if (tanggalMulaiEl) tanggalMulaiEl.value = today;
+    if (tanggalAkhirEl) tanggalAkhirEl.value = today;
 }
 
 // Init laporan page
