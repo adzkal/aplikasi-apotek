@@ -2,8 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// Konfigurasi Firebase Anda
-// GANTI dengan konfigurasi dari Firebase Console Anda
+// Konfigurasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBdXRKoFeWTsS4ZkqRI6Qaba2pVPMHY8t0",
   authDomain: "aplikasi-apotek-9ab41.firebaseapp.com",
